@@ -58,9 +58,6 @@ private:
 	Tile* m_getTile(int col, int row);
 	Tile* m_getTile(glm::vec2 grid_position);
 
-	// heuristic
-	Heuristic m_currentHeuristic;
-
 	// potential data structures
 	// std::vector<Tile*> m_pOpenList;
 	// std::vector<Tile*> m_pClosedList;
