@@ -116,6 +116,8 @@ void PlayScene::GUI_Function()
 		m_pStarShip->getTransform()->position = m_getTile(start_position[0], start_position[1])->getTransform()->position + offset;
 		m_pStarShip->setGridPosition(start_position[0], start_position[1]);
 		m_getTile(m_pStarShip->getGridPosition())->setTileStatus(START);
+
+		m_resetGrid();
 	}
 
 	ImGui::Separator();
@@ -132,14 +134,24 @@ void PlayScene::GUI_Function()
 		m_pTarget->getTransform()->position = m_getTile(goal_position[0], goal_position[1])->getTransform()->position + offset;
 		m_pTarget->setGridPosition(goal_position[0], goal_position[1]);
 		m_getTile(m_pTarget->getGridPosition())->setTileStatus(GOAL);
+
+		m_resetGrid();
 		m_computeTileCosts();
 	}
 
 	ImGui::Separator();
 
+	if (ImGui::Button("Find Shortest Path"))
+	{
+		m_findShortestPath();
+	}
+
+	
+	ImGui::Separator();
+
 	if (ImGui::Button("Reset"))
 	{
-
+		m_resetGrid();
 	}
 
 	
@@ -245,6 +257,84 @@ void PlayScene::m_computeTileCosts()
 	}
 }
 
+void PlayScene::m_findShortestPath()
+{
+	if(m_pPathList.empty())
+	{
+		// Step 1 - Add Start position to the open list
+		auto startTile = m_getTile(m_pStarShip->getGridPosition());
+		startTile->setTileStatus(OPEN);
+		m_pOpenList.push_back(startTile);
+
+		bool goalFound = false;
+
+		// Step 2 - Loop until the OpenList is empty or the Goal is found
+		while(!m_pOpenList.empty() && !goalFound)
+		{
+			auto min = INFINITY;
+			Tile* minTile; // temp Tile pointer - initialized as nullptr
+			int minTileIndex = 0;
+			int count = 0;
+
+			std::vector<Tile*> neighbourList;
+			for (int index = 0; index < NUM_OF_NEIGHBOUR_TILES; ++index)
+			{
+				if (m_pOpenList[0]->getNeighbourTile(static_cast<NeighbourTile>(index)) != nullptr)
+				{
+					neighbourList.push_back(m_pOpenList[0]->getNeighbourTile(static_cast<NeighbourTile>(index)));
+				}
+				
+			}
+
+			// for each  neighbour Tile pointer in the neighbourList -> Find the minimum neighbour Tile pointer
+			for (auto neighbour : neighbourList)
+			{
+				if(neighbour != nullptr)
+				{
+					//if the neighbour we are exploring is not the goal
+					if(neighbour->getTileStatus() != GOAL)
+					{
+						if(neighbour->getTileCost() < min)
+						{
+							min = neighbour->getTileCost();
+							minTile = neighbour;
+							minTileIndex = count;
+						}
+						count++;
+					}
+					//else if it is the goal
+					else
+					{
+						minTile = neighbour;
+						m_pPathList.push_back(minTile);
+						goalFound = true;
+						break;
+					}
+				}
+			}
+
+			// remove the reference of the current tile in the open list
+			m_pPathList.push_back(m_pOpenList[0]);
+			m_pOpenList.pop_back(); // empties the open list
+
+			// add the minTile to the openList
+			m_pOpenList.push_back(minTile);
+			minTile->setTileStatus(OPEN);
+			neighbourList.erase(neighbourList.begin() + minTileIndex);
+
+			// push all remaining neighbours onto the closed list
+			for (auto neighbour : neighbourList)
+			{
+				if(neighbour->getTileStatus() == UNVISITED)
+				{
+					neighbour->setTileStatus(CLOSED);
+					m_pClosedList.push_back(neighbour);
+				}
+			}
+		}
+	}
+}
+
 void PlayScene::m_setGridEnabled(const bool state)
 {
 	for (auto tile : m_pGrid)
@@ -273,4 +363,32 @@ Tile* PlayScene::m_getTile(glm::vec2 grid_position)
 	const auto row = grid_position.y;
 	
 	return m_pGrid[(row * Config::COL_NUM) + col];
+}
+
+void PlayScene::m_resetGrid()
+{
+	for (auto tile : m_pOpenList)
+	{
+		tile->setTileStatus(UNVISITED);
+	}
+
+	for (auto tile : m_pClosedList)
+	{
+		tile->setTileStatus(UNVISITED);
+	}
+
+	for (auto tile : m_pPathList)
+	{
+		tile->setTileStatus(UNVISITED);
+	}
+
+	m_pOpenList.clear();
+	m_pClosedList.clear();
+	m_pPathList.clear();
+
+	// reset the start tile
+	m_getTile(m_pStarShip->getGridPosition())->setTileStatus(START);
+	
+	// reset the Goal Tile
+	m_getTile(m_pTarget->getGridPosition())->setTileStatus(GOAL);
 }

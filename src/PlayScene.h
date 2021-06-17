@@ -47,7 +47,7 @@ private:
 	void m_computeTileCosts();
 
 	//TODO:
-	// void m_findShortestPath();
+	void m_findShortestPath();
 	// void m_displayPathList();
 	// void m_moveShipAlongPath();
 	
@@ -58,12 +58,13 @@ private:
 	Tile* m_getTile(int col, int row);
 	Tile* m_getTile(glm::vec2 grid_position);
 
-	// potential data structures
-	// std::vector<Tile*> m_pOpenList;
-	// std::vector<Tile*> m_pClosedList;
-	// std::vector<Tile*> m_pPathList;
+	void m_resetGrid();
 
-	// Path of Visibility? or LOS? as an optimization
+	// potential data structures
+	 std::vector<Tile*> m_pOpenList;
+	 std::vector<Tile*> m_pClosedList;
+	 std::vector<Tile*> m_pPathList;
+
 	
 
 };

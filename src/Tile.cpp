@@ -62,7 +62,8 @@ TileStatus Tile::getTileStatus() const
 void Tile::setTileStatus(const TileStatus status)
 {
 	m_status = status;
-
+	SDL_Color colour;
+	
 	switch(status)
 	{
 	case UNVISITED:
