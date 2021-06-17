@@ -67,6 +67,9 @@ void PlayScene::start()
 	m_pTarget->setGridPosition(15, 11);
 	m_getTile(15, 11)->setTileStatus(GOAL);
 	addChild(m_pTarget);
+	
+	m_spawnTarget();
+	
 
 	// Add StarShip to Scene
 	m_pStarShip = new StarShip();
@@ -74,6 +77,8 @@ void PlayScene::start()
 	m_pStarShip->setGridPosition(1, 3);
 	m_getTile(1, 3)->setTileStatus(START);
 	addChild(m_pStarShip);
+
+	m_spawnStarShip();
 
 	m_computeTileCosts();
 
@@ -333,7 +338,60 @@ void PlayScene::m_findShortestPath()
 			}
 		}
 	}
+
+	m_displayPathList();
 }
+
+void PlayScene::m_displayPathList()
+{
+	for (auto node : m_pPathList)
+	{
+		std::cout << "(" << node->getGridPosition().x << ", " << node->getGridPosition().y << ")" << std::endl;
+	}
+
+	std::cout << "Path Length: " << m_pPathList.size() << std::endl;
+}
+
+int PlayScene::m_spawnObject(NavigationObject* object)
+{
+	//m_resetGrid();
+
+	auto offset = glm::vec2(Config::TILE_SIZE * 0.5f, Config::TILE_SIZE * 0.5f);
+
+	Tile* randomTile = nullptr;
+	auto randomTileIndex = 0;
+	do
+	{
+		randomTileIndex = static_cast<int>(Util::RandomRange(0, m_pGrid.size() - 1));
+		std::cout << randomTileIndex << std::endl;
+		randomTile = m_pGrid[randomTileIndex];
+	}
+	while (randomTile->getTileStatus() != UNVISITED); // search for an empty tile
+	
+	// if moving a tile that exists then set it's previous position to UNVISITED
+	m_getTile(object->getGridPosition())->setTileStatus(UNVISITED);
+
+	// move the texture to the random tile
+	object->getTransform()->position = m_getTile(randomTile->getGridPosition())->getTransform()->position + offset;
+
+	// set the gridPosition of the object
+	object->setGridPosition(randomTile->getGridPosition().x, randomTile->getGridPosition().y);
+
+	return randomTileIndex;
+}
+
+void PlayScene::m_spawnStarShip()
+{
+	m_spawnObject(m_pStarShip);
+	m_getTile(m_pStarShip->getGridPosition())->setTileStatus(START);
+}
+
+void PlayScene::m_spawnTarget()
+{
+	m_spawnObject(m_pTarget);
+	m_getTile(m_pTarget->getGridPosition())->setTileStatus(GOAL);
+}
+
 
 void PlayScene::m_setGridEnabled(const bool state)
 {

@@ -48,8 +48,13 @@ private:
 
 	//TODO:
 	void m_findShortestPath();
-	// void m_displayPathList();
+	void m_displayPathList();
 	// void m_moveShipAlongPath();
+
+	int m_spawnObject(NavigationObject* object);
+	void m_spawnStarShip();
+	void m_spawnTarget();
+	
 	
 	void m_setGridEnabled(bool state);
 	bool m_getGridEnabled() const;
